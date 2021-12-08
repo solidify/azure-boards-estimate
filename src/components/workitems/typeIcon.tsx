@@ -20,6 +20,8 @@ export class WorkItemTypeIcon extends React.Component<
     IWorkItemTypeIconProps,
     IWorkItemTypeIconState
 > {
+
+   
     async componentDidMount() {
         const { icon, color } = this.props;
 

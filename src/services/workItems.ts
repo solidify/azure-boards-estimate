@@ -122,9 +122,19 @@ export class WorkItemService implements IWorkItemService {
            const workITemsArrLength = workITemsArr.length 
             while(true){
                const workItemsDAta = workITemsArr.splice(0, add ) 
-               const allWiItems:any = await  workItemTrackingClient.getWorkItems(workItemsDAta)  
+               const allWiItems:any = await workItemTrackingClient.getWorkItemsBatch({
+                ids: workItemsDAta,
+                fields: [
+                    "System.Id",
+                    "System.Title",
+                    "System.WorkItemType",
+                    "System.TeamProject"
+                ],
+                $expand: 0 /* None */,
+                errorPolicy: 2 /* Omit */
+            } as WorkItemBatchGetRequest);
                 Data.push(allWiItems)
-               add += 100
+                add += 100
             if(workITemsArrLength == Data.flat().length){
              return Data.flat()
     
@@ -279,7 +289,14 @@ export class WorkItemService implements IWorkItemService {
         const workItemIdsArrLength = workItemIdsArr.length 
          while(true){
             const workItemsDAta = workItemIdsArr.splice(0, add ) 
-            const wiData :any = await  workItemTrackingClient.getWorkItems(workItemsDAta)  
+            const wiData:any = await workItemTrackingClient.getWorkItemsBatch(
+                {
+                    ids: workItemsDAta,
+                    fields: Array.from(fields.values()),
+                    $expand: 0 /* WorkItemExpand.None */,
+                    errorPolicy: 2 /* WorkItemErrorPolicy.Omit */
+                } as WorkItemBatchGetRequest
+            );
             Data.push(wiData)
             add += 100
         if(workItemIdsArrLength == Data.flat().length){
