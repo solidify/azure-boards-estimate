@@ -1,4 +1,5 @@
 export interface IWorkItem {
+    fields?: any;
     project: string;
     id: number;
     title: string;

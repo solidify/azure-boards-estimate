@@ -103,25 +103,37 @@ export class WorkItemService implements IWorkItemService {
         });
     }
 
+
+
     async getWorkItems(workItemIds: number[]): Promise<IWorkItem[]> {
         if (!workItemIds || workItemIds.length === 0) {
             return [];
         }
 
+
+        let workITemsArr = [...workItemIds]
         // Get all work items
         const workItemTrackingClient = getClient(WorkItemTrackingRestClient);
-        const workItems = await workItemTrackingClient.getWorkItemsBatch({
-            ids: workItemIds,
-            fields: [
-                "System.Id",
-                "System.Title",
-                "System.WorkItemType",
-                "System.TeamProject"
-            ],
-            $expand: 0 /* None */,
-            errorPolicy: 2 /* Omit */
-        } as WorkItemBatchGetRequest);
 
+        const getWiItems = async ()=>{
+           
+           const Data:IWorkItem[] = []
+           let  add:number= 100
+           const workITemsArrLength = workITemsArr.length 
+            while(true){
+               const workItemsDAta = workITemsArr.splice(0, add ) 
+               const allWiItems:any = await  workItemTrackingClient.getWorkItems(workItemsDAta)  
+                Data.push(allWiItems)
+               add += 100
+            if(workITemsArrLength == Data.flat().length){
+             return Data.flat()
+    
+            }
+    
+            }
+        }
+    
+        const workItems = await getWiItems()
         const mappedWorkItems: IWorkItem[] = workItems.map(wi => {
             return {
                 project: wi.fields["System.TeamProject"],
@@ -260,19 +272,26 @@ export class WorkItemService implements IWorkItemService {
         }
 
         // Get work item data
-        const workItemsFieldData = await workItemTrackingClient.getWorkItemsBatch(
-            {
-                ids: workItemIds,
-                fields: Array.from(fields.values()),
-                $expand: 0 /* WorkItemExpand.None */,
-                errorPolicy: 2 /* WorkItemErrorPolicy.Omit */
-            } as WorkItemBatchGetRequest
-        );
+     const workItemsData = async ()=>{
+         const workItemIdsArr = [...workItemIds]
+         const Data:IWorkItem[] = []
+        let  add:number= 100
+        const workItemIdsArrLength = workItemIdsArr.length 
+         while(true){
+            const workItemsDAta = workItemIdsArr.splice(0, add ) 
+            const wiData :any = await  workItemTrackingClient.getWorkItems(workItemsDAta)  
+            Data.push(wiData)
+            add += 100
+        if(workItemIdsArrLength == Data.flat().length){
+           return Data.flat()
+          }}
+      }
 
-        const mappedWorkItemsById: { [id: number]: IWorkItem } = {};
+     const wiData =  await workItemsData()
+     const mappedWorkItemsById: { [id: number]: IWorkItem } = {};
         mappedWorkItems.forEach(x => (mappedWorkItemsById[x.id] = x));
 
-        for (const workItemFieldData of workItemsFieldData) {
+        for (const workItemFieldData of wiData) {
             try {
                 const workItem = mappedWorkItemsById[workItemFieldData.id];
                 const workItemTypeInfo = projectById
@@ -350,3 +369,5 @@ function transformColor(color: string): string {
 
     return color;
 }
+
+
